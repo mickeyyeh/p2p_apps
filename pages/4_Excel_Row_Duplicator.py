@@ -21,7 +21,7 @@ def duplicate_rows(dataframe, duplicates, values):
 
 
 def main():
-    st.title("Duplicate Rows App")
+    st.title("Excel Row Duplicator")
 
     uploaded_file = st.file_uploader(
         "Upload CSV or Excel file", type=["csv", "xlsx"])
