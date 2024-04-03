@@ -2,10 +2,9 @@ import streamlit as st
 import pandas as pd
 import io
 
-
 def duplicate_rows(dataframe, duplicates, values):
-    duplicated_rows = []  # Initialize an empty list to store duplicated rows
-    for _, row in dataframe.iterrows():
+    duplicated_dataframe = pd.DataFrame(columns=dataframe.columns)
+    for index, row in dataframe.iterrows():
         for i in range(len(values["Weight"])):
             new_row = row.copy()
             for column in values:
@@ -15,16 +14,13 @@ def duplicate_rows(dataframe, duplicates, values):
                     new_row[column] = int(values[column][i])
                 else:
                     new_row[column] = float(values[column][i])
-            duplicated_rows.append(new_row)  # Append the new row to the list
-    duplicated_dataframe = pd.concat(duplicated_rows, ignore_index=True)
+            duplicated_dataframe = duplicated_dataframe.append(new_row, ignore_index=True)
     return duplicated_dataframe
-
 
 def main():
     st.title("Duplicate Rows App")
 
-    uploaded_file = st.file_uploader(
-        "Upload CSV or Excel file", type=["csv", "xlsx"])
+    uploaded_file = st.file_uploader("Upload CSV or Excel file", type=["csv", "xlsx"])
 
     if uploaded_file is not None:
         st.write("Original File:")
@@ -35,18 +31,15 @@ def main():
 
         st.write(dataframe)
 
-        duplicates = st.number_input(
-            "Number of Duplicates", min_value=1, value=1)
+        duplicates = st.number_input("Number of Duplicates", min_value=1, value=1)
 
         values = {}
         for column in ["Weight", "ItemDescription", "SKU", "HarmonizationCode", "LineItemQuantity", "CustomsValue"]:
-            value_str = st.text_input(
-                f"Enter values for {column} (comma-separated):")
+            value_str = st.text_input(f"Enter values for {column} (comma-separated):")
             values[column] = [val.strip() for val in value_str.split(",")]
 
         if st.button("Duplicate Rows"):
-            duplicated_dataframe = duplicate_rows(
-                dataframe, duplicates, values)
+            duplicated_dataframe = duplicate_rows(dataframe, duplicates, values)
 
             st.write("Final Duplicated File:")
             st.write(duplicated_dataframe)
@@ -70,7 +63,6 @@ def main():
                     file_name="duplicated_data.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
-
 
 if __name__ == "__main__":
     main()
