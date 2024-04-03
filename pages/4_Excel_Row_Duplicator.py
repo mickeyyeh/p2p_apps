@@ -34,17 +34,8 @@ def main():
         else:
             dataframe = pd.read_excel(uploaded_file)
 
-        # Print data types of all columns
-        st.write("Data Types:")
-        st.write(dataframe.dtypes)
-
-        # Convert columns to appropriate data types
-        dataframe["Weight"] = dataframe["Weight"].astype(float)
-        dataframe["ItemDescription"] = dataframe["ItemDescription"].astype(str)
-        dataframe["SKU"] = dataframe["SKU"].astype(str)
-        dataframe["HarmonizationCode"] = dataframe["HarmonizationCode"].astype(str)
-        dataframe["LineItemQuantity"] = dataframe["LineItemQuantity"].astype(int)
-        dataframe["CustomsValue"] = dataframe["CustomsValue"].astype(float)
+        # Convert all columns to strings to avoid dtype conversion issues
+        dataframe = dataframe.astype(str)
 
         st.write(dataframe)
 
