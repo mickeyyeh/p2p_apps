@@ -45,7 +45,7 @@ def main():
             values[column] = [val.strip() for val in value_str.split(",")]
 
         file_name = st.text_input(
-            "Enter file name (without extension):", value="edited_data")
+            "Enter file name (without extensions: .xlsx or .csv):", value="edited_data")
 
         if st.button("Duplicate Rows"):
             duplicated_dataframe = duplicate_rows(
