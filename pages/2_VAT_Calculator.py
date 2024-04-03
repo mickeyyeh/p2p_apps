@@ -41,13 +41,12 @@ def convert_df(df):
 
 
 def main():
-    st.title("Vat Helper")
+    st.title("VAT Calculator")
     st.subheader("Please add data below")
     uploaded_file = st.file_uploader("Choose a file")
     df = getFile(uploaded_file)
 
     if uploaded_file:
-
         df = vatter(df)
 
         st.subheader("User Inputs")
