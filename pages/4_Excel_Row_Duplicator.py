@@ -4,8 +4,8 @@ import io
 
 
 def duplicate_rows(dataframe, duplicates, values):
-    duplicated_dataframe = pd.DataFrame(columns=dataframe.columns)
-    for index, row in dataframe.iterrows():
+    duplicated_rows = []  # Initialize an empty list to store duplicated rows
+    for _, row in dataframe.iterrows():
         for i in range(len(values["Weight"])):
             new_row = row.copy()
             for column in values:
@@ -15,9 +15,10 @@ def duplicate_rows(dataframe, duplicates, values):
                     new_row[column] = int(values[column][i])
                 else:
                     new_row[column] = float(values[column][i])
-            duplicated_dataframe = duplicated_dataframe.append(
-                new_row, ignore_index=True)
+            duplicated_rows.append(new_row)  # Append the new row to the list
+    duplicated_dataframe = pd.concat(duplicated_rows, ignore_index=True)
     return duplicated_dataframe
+
 
 
 def main():
