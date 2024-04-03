@@ -50,7 +50,7 @@ def main():
                 st.download_button(
                     label="Download Duplicated CSV",
                     data=csv,
-                    file_name="duplicated_data.csv",
+                    file_name="edited_data.csv",
                     mime="text/csv"
                 )
             else:
@@ -60,7 +60,7 @@ def main():
                 st.download_button(
                     label="Download Duplicated Excel",
                     data=excel_bytes,
-                    file_name="duplicated_data.xlsx",
+                    file_name="edited_data.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
 
