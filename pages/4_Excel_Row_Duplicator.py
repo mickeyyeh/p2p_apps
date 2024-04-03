@@ -39,7 +39,7 @@ def main():
             "Number of Duplicates", min_value=1, value=1)
 
         values = {}
-        for column in ["Weight", "ItemDescription", "SKU", "HarmonizationCode", "LineItemQuantity", "CustomsValue"]:
+        for column in ["Weight", "ItemDescription", "HarmonizationCode", "LineItemQuantity", "CustomsValue"]:
             value_str = st.text_input(
                 f"Enter values for {column} (comma-separated):")
             values[column] = [val.strip() for val in value_str.split(",")]
