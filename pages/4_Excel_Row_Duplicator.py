@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import io
 
+
 def duplicate_rows(dataframe, duplicates, values):
     duplicated_dataframe = pd.DataFrame(columns=dataframe.columns)
     for index, row in dataframe.iterrows():
@@ -14,13 +15,16 @@ def duplicate_rows(dataframe, duplicates, values):
                     new_row[column] = int(values[column][i])
                 else:
                     new_row[column] = float(values[column][i])
-            duplicated_dataframe = duplicated_dataframe.append(new_row, ignore_index=True)
+            duplicated_dataframe = duplicated_dataframe.append(
+                new_row, ignore_index=True)
     return duplicated_dataframe
+
 
 def main():
     st.title("Duplicate Rows App")
 
-    uploaded_file = st.file_uploader("Upload CSV or Excel file", type=["csv", "xlsx"])
+    uploaded_file = st.file_uploader(
+        "Upload CSV or Excel file", type=["csv", "xlsx"])
 
     if uploaded_file is not None:
         st.write("Original File:")
@@ -31,15 +35,21 @@ def main():
 
         st.write(dataframe)
 
-        duplicates = st.number_input("Number of Duplicates", min_value=1, value=1)
+        duplicates = st.number_input(
+            "Number of Duplicates", min_value=1, value=1)
 
         values = {}
         for column in ["Weight", "ItemDescription", "SKU", "HarmonizationCode", "LineItemQuantity", "CustomsValue"]:
-            value_str = st.text_input(f"Enter values for {column} (comma-separated):")
+            value_str = st.text_input(
+                f"Enter values for {column} (comma-separated):")
             values[column] = [val.strip() for val in value_str.split(",")]
 
+        file_name = st.text_input(
+            "Enter file name (without extension):", value="edited_data")
+
         if st.button("Duplicate Rows"):
-            duplicated_dataframe = duplicate_rows(dataframe, duplicates, values)
+            duplicated_dataframe = duplicate_rows(
+                dataframe, duplicates, values)
 
             st.write("Final Duplicated File:")
             st.write(duplicated_dataframe)
@@ -50,7 +60,7 @@ def main():
                 st.download_button(
                     label="Download Duplicated CSV",
                     data=csv,
-                    file_name="edited_data.csv",
+                    file_name=f"{file_name}.csv",
                     mime="text/csv"
                 )
             else:
@@ -60,9 +70,10 @@ def main():
                 st.download_button(
                     label="Download Duplicated Excel",
                     data=excel_bytes,
-                    file_name="edited_data.xlsx",
+                    file_name=f"{file_name}.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
+
 
 if __name__ == "__main__":
     main()
