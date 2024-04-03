@@ -34,6 +34,10 @@ def main():
         else:
             dataframe = pd.read_excel(uploaded_file)
 
+        # Print data types of all columns
+        st.write("Data Types:")
+        st.write(dataframe.dtypes)
+
         # Convert columns to appropriate data types
         dataframe["Weight"] = dataframe["Weight"].astype(float)
         dataframe["ItemDescription"] = dataframe["ItemDescription"].astype(str)
@@ -54,32 +58,34 @@ def main():
             values[column] = [val.strip() for val in value_str.split(",")]
 
         if st.button("Duplicate Rows"):
-            duplicated_dataframe = duplicate_rows(
-                dataframe, duplicates, values)
+            try:
+                duplicated_dataframe = duplicate_rows(
+                    dataframe, duplicates, values)
 
-            st.write("Final Duplicated File:")
-            st.write(duplicated_dataframe)
+                st.write("Final Duplicated File:")
+                st.write(duplicated_dataframe)
 
-            # Offer download link for the duplicated file
-            if uploaded_file.name.endswith(".csv"):
-                csv = duplicated_dataframe.to_csv(index=False)
-                st.download_button(
-                    label="Download Duplicated CSV",
-                    data=csv,
-                    file_name="duplicated_data.csv",
-                    mime="text/csv"
-                )
-            else:
-                excel_bytes = io.BytesIO()
-                duplicated_dataframe.to_excel(excel_bytes, index=False)
-                excel_bytes.seek(0)
-                st.download_button(
-                    label="Download Duplicated Excel",
-                    data=excel_bytes,
-                    file_name="duplicated_data.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-
+                # Offer download link for the duplicated file
+                if uploaded_file.name.endswith(".csv"):
+                    csv = duplicated_dataframe.to_csv(index=False)
+                    st.download_button(
+                        label="Download Duplicated CSV",
+                        data=csv,
+                        file_name="duplicated_data.csv",
+                        mime="text/csv"
+                    )
+                else:
+                    excel_bytes = io.BytesIO()
+                    duplicated_dataframe.to_excel(excel_bytes, index=False)
+                    excel_bytes.seek(0)
+                    st.download_button(
+                        label="Download Duplicated Excel",
+                        data=excel_bytes,
+                        file_name="duplicated_data.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    )
+            except Exception as e:
+                st.error(f"Error occurred: {e}")
 
 if __name__ == "__main__":
     main()
