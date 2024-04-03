@@ -34,6 +34,14 @@ def main():
         else:
             dataframe = pd.read_excel(uploaded_file)
 
+        # Convert columns to appropriate data types
+        dataframe["Weight"] = dataframe["Weight"].astype(float)
+        dataframe["ItemDescription"] = dataframe["ItemDescription"].astype(str)
+        dataframe["SKU"] = dataframe["SKU"].astype(str)
+        dataframe["HarmonizationCode"] = dataframe["HarmonizationCode"].astype(str)
+        dataframe["LineItemQuantity"] = dataframe["LineItemQuantity"].astype(int)
+        dataframe["CustomsValue"] = dataframe["CustomsValue"].astype(float)
+
         st.write(dataframe)
 
         duplicates = st.number_input(
