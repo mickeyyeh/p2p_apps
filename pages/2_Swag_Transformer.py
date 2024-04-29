@@ -122,7 +122,7 @@ def process_file(df):
 
 def main():
     st.title("Swag File Processor")
-    st.write("Make sure all items has a price. (in -$00.00 format")
+    st.write("Make sure all items has a price. (in -$00.00 format)")
         
     uploaded_file = st.file_uploader(
         "Upload your Excel file", type=["csv", "xlsx"])
