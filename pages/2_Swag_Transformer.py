@@ -48,15 +48,42 @@ def process_file(df):
                'ItemDescription', 'CustomsValue', 'LineItemQuantity']
     items_df = pd.DataFrame(columns=columns)
 
+    # for i in range(len(df['ITEM/COST'])):
+    #     string = df['ITEM/COST'][i]
+    #     name = df['NAME'][i].title()
+    #     country = df['country'][i].title()
+    #     lst = string.split(',')
+    #     new_lst = [x.strip() for x in lst]
+
+    #     for string in new_lst:
+    #         string_list = string.split(" ")
+    #         try:
+    #             item_quantity = int(string_list[0])
+    #             remaining_string_list = " ".join(string_list[1:]).split("-")
+    #             item_description = remaining_string_list[0].title()
+    #             cleaned_string = remaining_string_list[1].replace(
+    #                 '/EA', '').lstrip('$').split()[0]
+    #             price_per_unit = float(cleaned_string)
+    #             items_df = pd.concat([items_df, pd.DataFrame([[name, country, item_description.strip(
+    #             ), float(price_per_unit), item_quantity]], columns=columns)], ignore_index=True)
+    #         except:
+    #             item_quantity = 1
+    #             remaining_string_list = " ".join(string_list).split("-")
+    #             item_description = remaining_string_list[0].title()
+    #             cleaned_string = remaining_string_list[1].replace(
+    #                 '/EA', '').lstrip('$').split()[0]
+    #             price_per_unit = float(cleaned_string)
+    #             items_df = pd.concat([items_df, pd.DataFrame([[name, country, item_description.strip(
+    #             ), float(price_per_unit), item_quantity]], columns=columns)], ignore_index=True)
     for i in range(len(df['ITEM/COST'])):
         string = df['ITEM/COST'][i]
         name = df['NAME'][i].title()
         country = df['country'][i].title()
         lst = string.split(',')
         new_lst = [x.strip() for x in lst]
-
+    
         for string in new_lst:
-            string_list = string.split(" ")
+            string_list = re.split(r'\s(?=\d)', string)  # Split on space followed by a digit
             try:
                 item_quantity = int(string_list[0])
                 remaining_string_list = " ".join(string_list[1:]).split("-")
@@ -75,6 +102,7 @@ def process_file(df):
                 price_per_unit = float(cleaned_string)
                 items_df = pd.concat([items_df, pd.DataFrame([[name, country, item_description.strip(
                 ), float(price_per_unit), item_quantity]], columns=columns)], ignore_index=True)
+
 
     new_df = pd.merge(empty_df, items_df, on=[
                       'ConsigneeName', 'ConsigneeCountry'], how='left')
