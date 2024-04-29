@@ -90,7 +90,7 @@ def process_file(df):
 
 
 def main():
-    st.title("Excel File Processor")
+    st.title("Swag File Processor")
 
     uploaded_file = st.file_uploader(
         "Upload your Excel file", type=["csv", "xlsx"])
