@@ -92,11 +92,17 @@ def process_file(df):
                 remaining_string_list = " ".join(string_list[1:]).split("-")
                 print("Remaining String List:", remaining_string_list)  # Add this line to print remaining_string_list
                 item_description = remaining_string_list[0].title()
-                cleaned_string = remaining_string_list[1].replace(
-                    '/EA', '').lstrip('$').split()[0]
-                price_per_unit = float(cleaned_string)
-                items_df = pd.concat([items_df, pd.DataFrame([[name, country, item_description.strip(
-                ), float(price_per_unit), item_quantity]], columns=columns)], ignore_index=True)
+                if len(remaining_string_list) == 2:
+                    cleaned_string = remaining_string_list[1].replace(
+                        '/EA', '').lstrip('$').split()[0]
+                    price_per_unit = cleaned_string
+                    items_df = pd.concat([items_df, pd.DataFrame([[name, country, item_description.strip(
+                    ), price_per_unit, item_quantity]], columns=columns)], ignore_index=True)
+                else:
+                    cleaned_string = '$ Missing Item Value'
+                    price_per_unit = cleaned_string
+                    items_df = pd.concat([items_df, pd.DataFrame([[name, country, item_description.strip(
+                    ), price_per_unit, item_quantity]], columns=columns)], ignore_index=True)
             except:
                 item_quantity = 1
                 remaining_string_list = " ".join(string_list).split("-")
@@ -105,15 +111,15 @@ def process_file(df):
                     item_description = remaining_string_list[0].title()
                     cleaned_string = remaining_string_list[1].replace(
                         '/EA', '').lstrip('$').split()[0]
-                    price_per_unit = float(cleaned_string)
+                    price_per_unit = cleaned_string
                     items_df = pd.concat([items_df, pd.DataFrame([[name, country, item_description.strip(
-                    ), float(price_per_unit), item_quantity]], columns=columns)], ignore_index=True)
+                    ), price_per_unit, item_quantity]], columns=columns)], ignore_index=True)
                 else:
                     item_description = remaining_string_list[0].title()
                     cleaned_string = '$ Missing Item Value'
-                    price_per_unit = float(cleaned_string)
+                    price_per_unit = cleaned_string
                     items_df = pd.concat([items_df, pd.DataFrame([[name, country, item_description.strip(
-                    ), float(price_per_unit), item_quantity]], columns=columns)], ignore_index=True)
+                    ), price_per_unit, item_quantity]], columns=columns)], ignore_index=True)
 
 
 
