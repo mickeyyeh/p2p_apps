@@ -87,6 +87,7 @@ def process_file(df):
             try:
                 item_quantity = int(string_list[0])
                 remaining_string_list = " ".join(string_list[1:]).split("-")
+                print("Remaining String List:", remaining_string_list)  # Add this line to print remaining_string_list
                 item_description = remaining_string_list[0].title()
                 cleaned_string = remaining_string_list[1].replace(
                     '/EA', '').lstrip('$').split()[0]
@@ -96,12 +97,14 @@ def process_file(df):
             except:
                 item_quantity = 1
                 remaining_string_list = " ".join(string_list).split("-")
+                print("Remaining String List:", remaining_string_list)  # Add this line to print remaining_string_list
                 item_description = remaining_string_list[0].title()
                 cleaned_string = remaining_string_list[1].replace(
                     '/EA', '').lstrip('$').split()[0]
                 price_per_unit = float(cleaned_string)
                 items_df = pd.concat([items_df, pd.DataFrame([[name, country, item_description.strip(
                 ), float(price_per_unit), item_quantity]], columns=columns)], ignore_index=True)
+
 
 
     new_df = pd.merge(empty_df, items_df, on=[
