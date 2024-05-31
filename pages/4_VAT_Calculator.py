@@ -37,7 +37,7 @@ def vatter(df):
 @st.cache
 def convert_df(df):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
-    return df.to_excel(index=False)
+    return df.to_csv(index=False)
 
 
 def main():
@@ -54,11 +54,11 @@ def main():
 
         fileName = st.text_input("What is the file name?")
 
-        excel_df = convert_df(df)
+        csv_df = convert_df(df)
         if fileName:
             st.download_button(
                 label="Download data as Excel(XLSX)",
-                data=excel_df,
+                data=csv_df,
                 file_name=f'{fileName}.xlsx'
             )
 
