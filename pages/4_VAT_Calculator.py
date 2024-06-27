@@ -6,6 +6,7 @@ import pycountry
 import streamlit as st
 
 from io import BytesIO
+import math
 
 from utils.vat_calculator.country_formatter import format_country
 
