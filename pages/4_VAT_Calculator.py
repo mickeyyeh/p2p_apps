@@ -15,10 +15,10 @@ def getFile(uploaded_file, type="xlsx"):
             raise ValueError("results: status must be one of %r." % valid)
 
         elif type == "csv":
-            return pd.read_csv(uploaded_file)
+            return pd.read_csv(uploaded_file, dtype="str")
 
         else:
-            return pd.read_excel(uploaded_file)
+            return pd.read_excel(uploaded_file, dtype="str")
 
 
 def vatter(df):
@@ -28,16 +28,16 @@ def vatter(df):
     vat.rename(columns={"countrycode": "ISO_code"}, inplace=True)
     df = format_country(df, "Country")
     df = df.merge(vat, on="ISO_code")
-    df['VAT value'] = df['Package Value'] * df["vat_rate"]
+    df['VAT value'] = df['Package Value'].astype(float) * df["vat_rate"].astype(float)
     df = df.loc[df['Package Value'] < 150]
     return df
 
 
 # @st.cache_data
 @st.cache
-def convert_df(df):
+def convert_df(df, file_name):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
-    return df.to_csv(index=False)
+    return df.to_excel(file_name, index=False)
 
 
 def main():
@@ -54,12 +54,12 @@ def main():
 
         fileName = st.text_input("What is the file name?")
 
-        csv_df = convert_df(df)
+        csv_df = convert_df(df, fileName)
         if fileName:
             st.download_button(
-                label="Download data as CSV",
+                label="Download data as Excel (xlsx)",
                 data=csv_df,
-                file_name=f'{fileName}.csv'
+                file_name=f'{fileName}.xlsx'
             )
 
 
