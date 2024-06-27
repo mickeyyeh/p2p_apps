@@ -57,9 +57,9 @@ def main():
         csv_df = convert_df(df)
         if fileName:
             st.download_button(
-                label="Download data as Excel(XLSX)",
+                label="Download data as CSV",
                 data=csv_df,
-                file_name=f'{fileName}.xlsx'
+                file_name=f'{fileName}.csv'
             )
 
 
