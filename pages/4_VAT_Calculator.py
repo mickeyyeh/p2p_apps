@@ -39,8 +39,8 @@ def vatter(df):
     df['Length'] = df['Length'].astype(float)
     df['Height'] = df['Height'].astype(float)
     df['Width'] = df['Width'].astype(float)
-    df['Transits - Processed To Stop Event (Business Days)'] = df['Transits - Processed To Stop Event (Business Days)'].astype(float)
-    df['Transits - Processed To Stop Event (Calendar Days)'] = df['Transits - Processed To Stop Event (Calendar Days)'].astype(float)
+    df['Transits - Processed To Stop Event (Business Days)'] = df['Transits - Processed To Stop Event (Business Days)'].astype(int)
+    df['Transits - Processed To Stop Event (Calendar Days)'] = df['Transits - Processed To Stop Event (Calendar Days)'].astype(int)
     df["vat_rate"] = df["vat_rate"].astype(float)
     df['VAT value'] = df['Package Value'] * df["vat_rate"]
     df['VAT value'] = df['VAT value'].apply(lambda x: roundUP(x, 2)
