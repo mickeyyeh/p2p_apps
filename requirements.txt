@@ -17,4 +17,4 @@ pyreadline==2.1
 requests==2.31.0
 streamlit==1.23.1
 streamlit-authenticator==0.2.3
-math==3.12.4
+
