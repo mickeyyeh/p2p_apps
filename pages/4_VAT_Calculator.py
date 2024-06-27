@@ -43,7 +43,7 @@ def vatter(df):
     df['Transits - Processed To Stop Event (Calendar Days)'] = df['Transits - Processed To Stop Event (Calendar Days)'].astype(int)
     df["vat_rate"] = df["vat_rate"].astype(float)
     df['VAT value'] = df['Package Value'] * df["vat_rate"]
-    df['VAT value'] = df['VAT value'].apply(lambda x: roundUP(x, 2))
+    df['VAT value'] = df['VAT value'].apply(lambda x: roundUp(x, 2))
     df = df.loc[df['Package Value'] < 150]
     return df
 
