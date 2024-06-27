@@ -58,11 +58,9 @@ def convert_df(df):
 
 
 def roundUp(number, ndigits=0):
-    """Always round off"""
-    exp = number * 10 ** ndigits
-    if abs(exp) - abs(math.floor(exp)) < 0.5:
-        return type(number)(math.floor(exp) / 10 ** ndigits)
-    return type(number)(math.ceil(exp) / 10 ** ndigits)
+    """Round half up"""
+    multiplier = 10 ** ndigits
+    return math.floor(number * multiplier + 0.5) / multiplier
 
 
 def main():
