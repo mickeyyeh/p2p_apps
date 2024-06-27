@@ -28,7 +28,10 @@ def vatter(df):
     vat.rename(columns={"countrycode": "ISO_code"}, inplace=True)
     df = format_country(df, "Country")
     df = df.merge(vat, on="ISO_code")
-    df['VAT value'] = df['Package Value'].astype(float) * df["vat_rate"].astype(float)
+    # convert column typee from str to float
+    df['Package Value'] = df['Package Value'].astype(float)
+    df["vat_rate"] = df["vat_rate"].astype(float)
+    df['VAT value'] = df['Package Value'] * df["vat_rate"]
     df = df.loc[df['Package Value'] < 150]
     return df
 
