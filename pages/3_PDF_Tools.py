@@ -3,7 +3,6 @@ from PyPDF2 import PdfReader, PdfWriter
 import zipfile
 import io
 
-
 def merge_pdfs(pdf_files):
     # Create a BytesIO object to hold the merged PDF bytes
     merged_pdf_bytes = io.BytesIO()
@@ -26,7 +25,6 @@ def merge_pdfs(pdf_files):
     except Exception as e:
         st.error(f"Error merging PDFs: {e}")
         return None
-
 
 def split_pdf(pdf_file):
     pdf_reader = PdfReader(pdf_file)
@@ -74,7 +72,6 @@ def split_pdf(pdf_file):
                     mime="application/pdf"
                 )
 
-
 def main():
     st.title("PDF Tools")
 
@@ -87,8 +84,18 @@ def main():
             "Upload PDF files to merge", accept_multiple_files=True, type="pdf")
 
         if uploaded_files:
+            sort_option = st.selectbox(
+                "Sort files by",
+                ("Original Order", "Ascending", "Descending", "Alphabetically"))
+
+            if sort_option == "Ascending":
+                uploaded_files = sorted(uploaded_files, key=lambda x: x.name)
+            elif sort_option == "Descending":
+                uploaded_files = sorted(uploaded_files, key=lambda x: x.name, reverse=True)
+            elif sort_option == "Alphabetically":
+                uploaded_files = sorted(uploaded_files, key=lambda x: x.name.lower())
+
             if st.button("Merge PDFs"):
-                # The uploaded files are already in the order of upload
                 merged_pdf_bytes = merge_pdfs(uploaded_files)
                 if merged_pdf_bytes:
                     st.success("PDFs merged successfully!")
@@ -108,7 +115,6 @@ def main():
         if uploaded_file:
             if st.button("Split PDF"):
                 split_pdf(uploaded_file)
-
 
 if __name__ == "__main__":
     main()
