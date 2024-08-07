@@ -1,8 +1,6 @@
 import streamlit as st
 from PyPDF2 import PdfReader, PdfWriter
-
 import zipfile
-import os
 import io
 
 
@@ -86,10 +84,11 @@ def main():
 
     if option == "Merge PDFs":
         uploaded_files = st.file_uploader(
-            "Upload PDF files to merge", accept_multiple_files=True)
+            "Upload PDF files to merge", accept_multiple_files=True, type="pdf")
 
         if uploaded_files:
             if st.button("Merge PDFs"):
+                # The uploaded files are already in the order of upload
                 merged_pdf_bytes = merge_pdfs(uploaded_files)
                 if merged_pdf_bytes:
                     st.success("PDFs merged successfully!")
