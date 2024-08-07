@@ -1,5 +1,6 @@
 import streamlit as st
 from PyPDF2 import PdfReader, PdfWriter
+import zipfile
 
 import os
 import io
@@ -33,23 +34,42 @@ def split_pdf(pdf_file):
     pdf_reader = PdfReader(pdf_file)
     num_pages = len(pdf_reader.pages)
 
-    try:
-        for page_number in range(num_pages):
-            page = pdf_reader.pages[page_number]
-            writer = PdfWriter()
-            writer.add_page(page)
-            split_pdf_bytes = io.BytesIO()
-            writer.write(split_pdf_bytes)
-            split_pdf_bytes.seek(0)
+    # Create a BytesIO object to hold the zip file bytes
+    zip_bytes = io.BytesIO()
 
-            st.download_button(
-                label=f"Download Page {page_number + 1}",
-                data=split_pdf_bytes.getvalue(),
-                file_name=f"page_{page_number + 1}.pdf",
-                mime="application/pdf"
-            )
-    except Exception as e:
-        st.error(f"Error splitting PDF: {e}")
+    # Create a ZipFile object
+    with zipfile.ZipFile(zip_bytes, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        try:
+            for page_number in range(num_pages):
+                page = pdf_reader.pages[page_number]
+                writer = PdfWriter()
+                writer.add_page(page)
+                split_pdf_bytes = io.BytesIO()
+                writer.write(split_pdf_bytes)
+                split_pdf_bytes.seek(0)
+
+                # Add the split PDF bytes to the zip file
+                zipf.writestr(f"page_{page_number + 1}.pdf", split_pdf_bytes.getvalue())
+
+                st.download_button(
+                    label=f"Download Page {page_number + 1}",
+                    data=split_pdf_bytes.getvalue(),
+                    file_name=f"page_{page_number + 1}.pdf",
+                    mime="application/pdf"
+                )
+        except Exception as e:
+            st.error(f"Error splitting PDF: {e}")
+
+    # Reset the BytesIO object's position to the beginning
+    zip_bytes.seek(0)
+
+    # Offer download link for the zip file containing all split PDFs
+    st.download_button(
+        label="Download All Pages",
+        data=zip_bytes.getvalue(),
+        file_name="split_pdfs.zip",
+        mime="application/zip"
+    )
 
 
 def main():
