@@ -51,12 +51,6 @@ def split_pdf(pdf_file):
                 # Add the split PDF bytes to the zip file
                 zipf.writestr(f"page_{page_number + 1}.pdf", split_pdf_bytes.getvalue())
 
-                st.download_button(
-                    label=f"Download Page {page_number + 1}",
-                    data=split_pdf_bytes.getvalue(),
-                    file_name=f"page_{page_number + 1}.pdf",
-                    mime="application/pdf"
-                )
         except Exception as e:
             st.error(f"Error splitting PDF: {e}")
 
@@ -70,6 +64,17 @@ def split_pdf(pdf_file):
         file_name="split_pdfs.zip",
         mime="application/zip"
     )
+
+    # Now display download buttons for each individual page
+    with zipfile.ZipFile(zip_bytes, 'r') as zipf:
+        for page_number in range(num_pages):
+            with zipf.open(f"page_{page_number + 1}.pdf") as split_pdf_bytes:
+                st.download_button(
+                    label=f"Download Page {page_number + 1}",
+                    data=split_pdf_bytes.read(),
+                    file_name=f"page_{page_number + 1}.pdf",
+                    mime="application/pdf"
+                )
 
 
 def main():
