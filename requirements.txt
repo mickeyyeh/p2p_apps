@@ -18,4 +18,4 @@ requests==2.31.0
 streamlit==1.23.1
 streamlit-authenticator==0.2.3
 PyMuPDF==1.24.10
-pillow==10.4.0
+pillow==9.5.0  # Adjusted to be <10 as required by streamlit
