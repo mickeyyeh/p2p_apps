@@ -1,169 +1,19 @@
-##-- Attempting To Add Key Word Scan in PDF Split --##
-# import streamlit as st
-# from PyPDF2 import PdfReader, PdfWriter
-
-# import zipfile
-# import io
-# import re
-
-# def natural_sort_key(s):
-#     return [int(text) if text.isdigit() else text.lower() for text in re.split('([0-9]+)', s)]
-
-# def merge_pdfs(pdf_files):
-#     merged_pdf_bytes = io.BytesIO()
-#     merger = PdfWriter()
-
-#     try:
-#         for pdf_file in pdf_files:
-#             pdf_reader = PdfReader(pdf_file)
-#             for page in pdf_reader.pages:
-#                 merger.add_page(page)
-
-#         merger.write(merged_pdf_bytes)
-#         merged_pdf_bytes.seek(0)
-#         return merged_pdf_bytes.getvalue()
-
-#     except Exception as e:
-#         st.error(f"Error merging PDFs: {e}")
-#         return None
-
-# def split_pdf(pdf_file, keywords):
-#     pdf_reader = PdfReader(pdf_file)
-#     num_pages = len(pdf_reader.pages)
-#     zip_bytes = io.BytesIO()
-#     pages_to_keep = []
-#     split_files = []
-
-#     try:
-#         for page_number in range(num_pages):
-#             page = pdf_reader.pages[page_number]
-#             text = page.extract_text()
-#             if not any(keyword.lower() in text.lower() for keyword in keywords):
-#                 pages_to_keep.append(page_number)
-#             writer = PdfWriter()
-#             writer.add_page(page)
-#             split_pdf_bytes = io.BytesIO()
-#             writer.write(split_pdf_bytes)
-#             split_pdf_bytes.seek(0)
-#             split_files.append((f"page_{page_number + 1}.pdf", split_pdf_bytes.getvalue()))
-
-#         # Sort split files naturally by their names
-#         split_files = sorted(split_files, key=lambda x: natural_sort_key(x[0]))
-
-#         # Create a ZipFile object and add sorted split files to the zip file
-#         with zipfile.ZipFile(zip_bytes, 'w', zipfile.ZIP_DEFLATED) as zipf:
-#             for file_name, file_data in split_files:
-#                 zipf.writestr(file_name, file_data)
-
-#     except Exception as e:
-#         st.error(f"Error splitting PDF: {e}")
-
-#     zip_bytes.seek(0)
-#     st.download_button(
-#         label="Download All Pages",
-#         data=zip_bytes.getvalue(),
-#         file_name="split_pdfs.zip",
-#         mime="application/zip"
-#     )
-
-#     # Now display download buttons for each individual page
-#     with zipfile.ZipFile(zip_bytes, 'r') as zipf:
-#         for file_name, _ in split_files:
-#             with zipf.open(file_name) as split_pdf_bytes:
-#                 st.download_button(
-#                     label=f"Download {file_name.split('.')[0].replace('_', ' ').capitalize()}",
-#                     data=split_pdf_bytes.read(),
-#                     file_name=file_name,
-#                     mime="application/pdf"
-#                 )
-
-#     if keywords:
-#         zip_bytes_keywords_removed = io.BytesIO()
-#         with zipfile.ZipFile(zip_bytes_keywords_removed, 'w', zipfile.ZIP_DEFLATED) as zipf:
-#             for page_number in pages_to_keep:
-#                 page = pdf_reader.pages[page_number]
-#                 writer = PdfWriter()
-#                 writer.add_page(page)
-#                 split_pdf_bytes = io.BytesIO()
-#                 writer.write(split_pdf_bytes)
-#                 split_pdf_bytes.seek(0)
-#                 zipf.writestr(f"page_{page_number + 1}.pdf", split_pdf_bytes.getvalue())
-
-#         zip_bytes_keywords_removed.seek(0)
-#         st.download_button(
-#             label="Download Pages Without Keywords",
-#             data=zip_bytes_keywords_removed.getvalue(),
-#             file_name="split_pdfs_keywords_removed.zip",
-#             mime="application/zip"
-#         )
-
-# def main():
-#     st.title("PDF Tools")
-#     option = st.selectbox(
-#         "Select an action",
-#         ("Merge PDFs", "Split PDF")
-#     )
-
-#     if option == "Merge PDFs":
-#         uploaded_files = st.file_uploader(
-#             "Upload PDF files to merge", accept_multiple_files=True, type="pdf")
-
-#         if uploaded_files:
-#             sort_option = st.selectbox(
-#                 "Sort files by",
-#                 ("Original Order", "Ascending", "Descending", "Alphabetically"))
-
-#             if sort_option == "Ascending":
-#                 uploaded_files = sorted(uploaded_files, key=lambda x: natural_sort_key(x.name))
-#             elif sort_option == "Descending":
-#                 uploaded_files = sorted(uploaded_files, key=lambda x: natural_sort_key(x.name), reverse=True)
-#             elif sort_option == "Alphabetically":
-#                 uploaded_files = sorted(uploaded_files, key=lambda x: x.name.lower())
-
-#             if st.button("Merge PDFs"):
-#                 merged_pdf_bytes = merge_pdfs(uploaded_files)
-#                 if merged_pdf_bytes:
-#                     st.success("PDFs merged successfully!")
-#                     st.download_button(
-#                         label="Download Merged PDF",
-#                         data=merged_pdf_bytes,
-#                         file_name="merged_pdf.pdf",
-#                         mime="application/pdf"
-#                     )
-
-#     elif option == "Split PDF":
-#         uploaded_file = st.file_uploader("Upload PDF file to split", type="pdf")
-#         keywords = st.text_input("Enter keywords to remove pages (comma-separated)").split(',')
-
-#         if uploaded_file:
-#             if st.button("Split PDF"):
-#                 split_pdf(uploaded_file, keywords)
-
-# if __name__ == "__main__":
-#     main()
-
-
 import streamlit as st
-from PyPDF2 import PdfReader, PdfWriter
-
-import zipfile
+import fitz  # PyMuPDF
 import io
-import re
+from PIL import Image
 
-def natural_sort_key(s):
-    return [int(text) if text.isdigit() else text.lower() for text in re.split('([0-9]+)', s)]
 
 def merge_pdfs(pdf_files):
     merged_pdf_bytes = io.BytesIO()
-    merger = PdfWriter()
+    merger = fitz.open()
 
     try:
         for pdf_file in pdf_files:
-            pdf_reader = PdfReader(pdf_file)
-            for page in pdf_reader.pages:
-                merger.add_page(page)
+            pdf_document = fitz.open(stream=pdf_file.read(), filetype="pdf")
+            merger.insert_pdf(pdf_document)
 
-        merger.write(merged_pdf_bytes)
+        merger.save(merged_pdf_bytes)
         merged_pdf_bytes.seek(0)
         return merged_pdf_bytes.getvalue()
 
@@ -171,45 +21,91 @@ def merge_pdfs(pdf_files):
         st.error(f"Error merging PDFs: {e}")
         return None
 
+
 def split_pdf(pdf_file):
-    pdf_reader = PdfReader(pdf_file)
-    num_pages = len(pdf_reader.pages)
-    zip_bytes = io.BytesIO()
+    pdf_document = fitz.open(stream=pdf_file.read(), filetype="pdf")
+    num_pages = len(pdf_document)
 
-    with zipfile.ZipFile(zip_bytes, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        try:
-            for page_number in range(num_pages):
-                page = pdf_reader.pages[page_number]
-                writer = PdfWriter()
-                writer.add_page(page)
-                split_pdf_bytes = io.BytesIO()
-                writer.write(split_pdf_bytes)
-                split_pdf_bytes.seek(0)
-                zipf.writestr(f"page_{page_number + 1}.pdf", split_pdf_bytes.getvalue())
-
-        except Exception as e:
-            st.error(f"Error splitting PDF: {e}")
-
-    zip_bytes.seek(0)
-    st.download_button(
-        label="Download All Pages",
-        data=zip_bytes.getvalue(),
-        file_name="split_pdfs.zip",
-        mime="application/zip"
-    )
-
-    with zipfile.ZipFile(zip_bytes, 'r') as zipf:
+    try:
         for page_number in range(num_pages):
-            with zipf.open(f"page_{page_number + 1}.pdf") as split_pdf_bytes:
-                st.download_button(
-                    label=f"Download Page {page_number + 1}",
-                    data=split_pdf_bytes.read(),
-                    file_name=f"page_{page_number + 1}.pdf",
-                    mime="application/pdf"
-                )
+            writer = fitz.open()
+            writer.insert_pdf(
+                pdf_document, from_page=page_number, to_page=page_number)
+            split_pdf_bytes = io.BytesIO()
+            writer.save(split_pdf_bytes)
+            split_pdf_bytes.seek(0)
+
+            st.download_button(
+                label=f"Download Page {page_number + 1}",
+                data=split_pdf_bytes.getvalue(),
+                file_name=f"page_{page_number + 1}.pdf",
+                mime="application/pdf"
+            )
+    except Exception as e:
+        st.error(f"Error splitting PDF: {e}")
+
+
+def preview_pdf_pages(pdf_file, sort_order):
+    # Convert PDF to images for preview with higher DPI
+    pdf_document = fitz.open(stream=pdf_file.read(), filetype="pdf")
+    images = []
+    dpi = 600  # Increased DPI for sharper image quality
+
+    for page_number in range(len(pdf_document)):
+        page = pdf_document.load_page(page_number)
+        pix = page.get_pixmap(matrix=fitz.Matrix(
+            dpi / 72, dpi / 72))  # Set DPI
+        img = Image.open(io.BytesIO(pix.tobytes()))
+        images.append((page_number + 1, img))
+
+    # Sort pages based on user input
+    if sort_order == "Ascending":
+        images = sorted(images, key=lambda x: x[0])
+    elif sort_order == "Descending":
+        images = sorted(images, key=lambda x: x[0], reverse=True)
+    elif sort_order == "Alphabetical":
+        # Convert page number to string for alphabetical sorting
+        images = sorted(images, key=lambda x: str(x[0]))
+
+    # Display images and options for deletion and reordering
+    page_selection = []
+    used_positions = set()
+    new_order = {}
+
+    st.write("### Preview Pages (Select Pages to Delete and Set Order)")
+
+    for page_number, img in images:
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            delete_key = f"delete_{page_number}"
+            delete = st.checkbox(f"Delete Page {page_number}", key=f"{
+                                 delete_key}_{pdf_file.name}")
+            if delete:
+                page_selection.append(page_number)
+        with col2:
+            reorder_key = f"reorder_{page_number}"
+            new_idx = st.number_input(f"New Position for Page {page_number}",
+                                      value=page_number, key=f"{reorder_key}_{pdf_file.name}")
+            if new_idx in used_positions:
+                st.warning(
+                    f"Position {new_idx} is already used. Please choose a different position.")
+            else:
+                used_positions.add(new_idx)
+                new_order[page_number] = new_idx
+
+    # Filter out deleted pages and sort based on new order
+    edited_pages = [page for page in images if page[0] not in page_selection]
+    edited_pages = sorted(
+        edited_pages, key=lambda x: new_order.get(x[0], x[0]))
+
+    # Display the preview images
+    preview_images = [img for _, img in edited_pages]
+    return preview_images
+
 
 def main():
     st.title("PDF Tools")
+
     option = st.selectbox(
         "Select an action",
         ("Merge PDFs", "Split PDF")
@@ -217,38 +113,60 @@ def main():
 
     if option == "Merge PDFs":
         uploaded_files = st.file_uploader(
-            "Upload PDF files to merge", accept_multiple_files=True, type="pdf")
+            "Upload PDF files to merge", accept_multiple_files=True, type="pdf"
+        )
 
         if uploaded_files:
-            sort_option = st.selectbox(
-                "Sort files by",
-                ("Original Order", "Ascending", "Descending", "Alphabetically"))
+            # Add sort order selection
+            sort_order = st.selectbox(
+                "Sort Pages",
+                ["Original Order", "Ascending", "Descending", "Alphabetical"]
+            )
 
-            if sort_option == "Ascending":
-                uploaded_files = sorted(uploaded_files, key=lambda x: natural_sort_key(x.name))
-            elif sort_option == "Descending":
-                uploaded_files = sorted(uploaded_files, key=lambda x: natural_sort_key(x.name), reverse=True)
-            elif sort_option == "Alphabetically":
-                uploaded_files = sorted(uploaded_files, key=lambda x: x.name.lower())
+            # If "Original Order" is selected, keep files in the order they were uploaded
+            if sort_order == "Original Order":
+                sort_order = "Ascending"  # Default to ascending to maintain the original order
 
-            if st.button("Merge PDFs"):
-                merged_pdf_bytes = merge_pdfs(uploaded_files)
-                if merged_pdf_bytes:
-                    st.success("PDFs merged successfully!")
-                    st.download_button(
-                        label="Download Merged PDF",
-                        data=merged_pdf_bytes,
-                        file_name="merged_pdf.pdf",
-                        mime="application/pdf"
-                    )
+            all_images = []
+            for uploaded_file in uploaded_files:
+                st.write(f"### Preview and Edit: {uploaded_file.name}")
+                preview_images = preview_pdf_pages(uploaded_file, sort_order)
+                all_images.extend(preview_images)
+
+            if all_images:
+                st.write("### Final Preview")
+                # Display images in a scrollable container
+                for img in all_images:
+                    st.image(img, use_column_width=True)
+
+                if st.button("Merge PDFs"):
+                    # Create temporary PDFs from the preview images
+                    temp_files = []
+                    for img in all_images:
+                        temp_pdf = io.BytesIO()
+                        img.save(temp_pdf, format='PDF')
+                        temp_pdf.seek(0)
+                        temp_files.append(temp_pdf)
+
+                    merged_pdf_bytes = merge_pdfs(temp_files)
+                    if merged_pdf_bytes:
+                        st.success("PDFs merged successfully!")
+                        st.download_button(
+                            label="Download Merged PDF",
+                            data=merged_pdf_bytes,
+                            file_name="merged_pdf.pdf",
+                            mime="application/pdf"
+                        )
 
     elif option == "Split PDF":
-        uploaded_file = st.file_uploader("Upload PDF file to split", type="pdf")
+        uploaded_file = st.file_uploader(
+            "Upload PDF file to split", type="pdf"
+        )
 
         if uploaded_file:
             if st.button("Split PDF"):
                 split_pdf(uploaded_file)
 
+
 if __name__ == "__main__":
     main()
-
