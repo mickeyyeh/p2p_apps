@@ -115,8 +115,7 @@ def preview_pdf_pages(pdf_file, sort_order):
         col1, col2 = st.columns([1, 1])
         with col1:
             delete_key = f"delete_{page_number}"
-            delete = st.checkbox(f"Delete Page {page_number}", key=f"{
-                                 delete_key}_{pdf_file.name}")
+            delete = st.checkbox(f"Delete Page {page_number}", key=f"{delete_key}_{pdf_file.name}")
             if delete:
                 page_selection.append(page_number)
         with col2:
