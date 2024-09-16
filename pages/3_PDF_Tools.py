@@ -3,10 +3,6 @@ import fitz  # PyMuPDF
 import io
 from PIL import Image
 
-# Use Streamlit session state to store selected pages to exclude
-if "exclude_pages" not in st.session_state:
-    st.session_state.exclude_pages = []
-
 
 def merge_pdfs(pdf_files):
     merged_pdf_bytes = io.BytesIO()
@@ -26,60 +22,27 @@ def merge_pdfs(pdf_files):
         return None
 
 
-def split_pdf(pdf_file):
-    pdf_document = fitz.open(stream=pdf_file.read(), filetype="pdf")
+def split_pdf(pdf_content, pages_to_keep=None, exclude_pages=None):
+    pdf_document = fitz.open(stream=pdf_content, filetype="pdf")
     num_pages = len(pdf_document)
 
-    st.write("### Download All Pages Except Specified")
+    writer = fitz.open()
 
-    # Multi-select widget to choose pages to exclude
-    exclude_pages = st.multiselect(
-        "Select pages to exclude from download",
-        list(range(1, num_pages + 1)),
-        format_func=lambda x: f"Page {x}",
-        default=st.session_state.exclude_pages
-    )
-
-    # Update session state with selected pages
-    st.session_state.exclude_pages = exclude_pages
-
-    # Button to download all pages except the selected ones
-    if st.button("Download All Except Specified Pages"):
-        writer = fitz.open()
+    if exclude_pages is not None:
         for page_number in range(num_pages):
             if (page_number + 1) not in exclude_pages:
                 writer.insert_pdf(
                     pdf_document, from_page=page_number, to_page=page_number)
-        all_except_pdf_bytes = io.BytesIO()
-        writer.save(all_except_pdf_bytes)
-        all_except_pdf_bytes.seek(0)
-
-        st.download_button(
-            label="Download All Except Specified Pages",
-            data=all_except_pdf_bytes.getvalue(),
-            file_name="all_except_specified_pages.pdf",
-            mime="application/pdf"
-        )
-
-    # Download individual pages
-    try:
-        for page_number in range(num_pages):
-            writer = fitz.open()
+    elif pages_to_keep is not None:
+        for page_number in pages_to_keep:
             writer.insert_pdf(
-                pdf_document, from_page=page_number, to_page=page_number
-            )
-            split_pdf_bytes = io.BytesIO()
-            writer.save(split_pdf_bytes)
-            split_pdf_bytes.seek(0)
+                pdf_document, from_page=page_number - 1, to_page=page_number - 1)
 
-            st.download_button(
-                label=f"Download Page {page_number + 1}",
-                data=split_pdf_bytes.getvalue(),
-                file_name=f"page_{page_number + 1}.pdf",
-                mime="application/pdf"
-            )
-    except Exception as e:
-        st.error(f"Error splitting PDF: {e}")
+    split_pdf_bytes = io.BytesIO()
+    writer.save(split_pdf_bytes)
+    split_pdf_bytes.seek(0)
+
+    return split_pdf_bytes.getvalue()
 
 
 def preview_pdf_pages(pdf_file, sort_order):
@@ -104,39 +67,7 @@ def preview_pdf_pages(pdf_file, sort_order):
         # Convert page number to string for alphabetical sorting
         images = sorted(images, key=lambda x: str(x[0]))
 
-    # Display images and options for deletion and reordering
-    page_selection = []
-    used_positions = set()
-    new_order = {}
-
-    st.write("### Preview Pages (Select Pages to Delete and Set Order)")
-
-    for page_number, img in images:
-        col1, col2 = st.columns([1, 1])
-        with col1:
-            delete_key = f"delete_{page_number}"
-            delete = st.checkbox(f"Delete Page {page_number}", key=f"{delete_key}_{pdf_file.name}")
-            if delete:
-                page_selection.append(page_number)
-        with col2:
-            reorder_key = f"reorder_{page_number}"
-            new_idx = st.number_input(f"New Position for Page {page_number}",
-                                      value=page_number, key=f"{reorder_key}_{pdf_file.name}")
-            if new_idx in used_positions:
-                st.warning(
-                    f"Position {new_idx} is already used. Please choose a different position.")
-            else:
-                used_positions.add(new_idx)
-                new_order[page_number] = new_idx
-
-    # Filter out deleted pages and sort based on new order
-    edited_pages = [page for page in images if page[0] not in page_selection]
-    edited_pages = sorted(
-        edited_pages, key=lambda x: new_order.get(x[0], x[0]))
-
-    # Display the preview images
-    preview_images = [img for _, img in edited_pages]
-    return preview_images
+    return images
 
 
 def main():
@@ -158,10 +89,6 @@ def main():
                 "Sort Pages",
                 ["Original Order", "Ascending", "Descending", "Alphabetical"]
             )
-
-            # If "Original Order" is selected, keep files in the order they were uploaded
-            if sort_order == "Original Order":
-                sort_order = "Ascending"  # Default to ascending to maintain the original order
 
             all_images = []
             for uploaded_file in uploaded_files:
@@ -200,8 +127,54 @@ def main():
         )
 
         if uploaded_file:
-            if st.button("Split PDF"):
-                split_pdf(uploaded_file)
+            # Store the PDF content in memory for reuse
+            pdf_content = uploaded_file.getvalue()
+
+            num_pages = len(fitz.open(stream=pdf_content, filetype="pdf"))
+
+            # Let the user choose between excluding or selecting specific pages
+            split_option = st.radio(
+                "How would you like to split the PDF?",
+                ("Exclude pages", "Select specific pages to download")
+            )
+
+            if split_option == "Exclude pages":
+                exclude_pages = st.multiselect(
+                    "Select pages to exclude from download",
+                    list(range(1, num_pages + 1)),
+                    format_func=lambda x: f"Page {x}"
+                )
+
+                if st.button("Split PDF") and exclude_pages:
+                    st.write(f"Excluding pages: {exclude_pages}")
+                    pdf_bytes = split_pdf(
+                        pdf_content, exclude_pages=exclude_pages)
+
+                    st.download_button(
+                        label="Download All Except Specified Pages",
+                        data=pdf_bytes,
+                        file_name="all_except_specified_pages.pdf",
+                        mime="application/pdf"
+                    )
+
+            elif split_option == "Select specific pages to download":
+                pages_to_keep = st.multiselect(
+                    "Select pages to download",
+                    list(range(1, num_pages + 1)),
+                    format_func=lambda x: f"Page {x}"
+                )
+
+                if st.button("Download Selected Pages") and pages_to_keep:
+                    st.write(f"Downloading selected pages: {pages_to_keep}")
+                    pdf_bytes = split_pdf(
+                        pdf_content, pages_to_keep=pages_to_keep)
+
+                    st.download_button(
+                        label="Download Selected Pages PDF",
+                        data=pdf_bytes,
+                        file_name="selected_pages.pdf",
+                        mime="application/pdf"
+                    )
 
 
 if __name__ == "__main__":
