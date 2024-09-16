@@ -3,6 +3,10 @@ import fitz  # PyMuPDF
 import io
 from PIL import Image
 
+# Use Streamlit session state to store selected pages to exclude
+if "exclude_pages" not in st.session_state:
+    st.session_state.exclude_pages = []
+
 
 def merge_pdfs(pdf_files):
     merged_pdf_bytes = io.BytesIO()
@@ -26,11 +30,44 @@ def split_pdf(pdf_file):
     pdf_document = fitz.open(stream=pdf_file.read(), filetype="pdf")
     num_pages = len(pdf_document)
 
+    st.write("### Download All Pages Except Specified")
+
+    # Multi-select widget to choose pages to exclude
+    exclude_pages = st.multiselect(
+        "Select pages to exclude from download",
+        list(range(1, num_pages + 1)),
+        format_func=lambda x: f"Page {x}",
+        default=st.session_state.exclude_pages
+    )
+
+    # Update session state with selected pages
+    st.session_state.exclude_pages = exclude_pages
+
+    # Button to download all pages except the selected ones
+    if st.button("Download All Except Specified Pages"):
+        writer = fitz.open()
+        for page_number in range(num_pages):
+            if (page_number + 1) not in exclude_pages:
+                writer.insert_pdf(
+                    pdf_document, from_page=page_number, to_page=page_number)
+        all_except_pdf_bytes = io.BytesIO()
+        writer.save(all_except_pdf_bytes)
+        all_except_pdf_bytes.seek(0)
+
+        st.download_button(
+            label="Download All Except Specified Pages",
+            data=all_except_pdf_bytes.getvalue(),
+            file_name="all_except_specified_pages.pdf",
+            mime="application/pdf"
+        )
+
+    # Download individual pages
     try:
         for page_number in range(num_pages):
             writer = fitz.open()
             writer.insert_pdf(
-                pdf_document, from_page=page_number, to_page=page_number)
+                pdf_document, from_page=page_number, to_page=page_number
+            )
             split_pdf_bytes = io.BytesIO()
             writer.save(split_pdf_bytes)
             split_pdf_bytes.seek(0)
@@ -78,7 +115,8 @@ def preview_pdf_pages(pdf_file, sort_order):
         col1, col2 = st.columns([1, 1])
         with col1:
             delete_key = f"delete_{page_number}"
-            delete = st.checkbox(f"Delete Page {page_number}", key=f"{delete_key}_{pdf_file.name}")
+            delete = st.checkbox(f"Delete Page {page_number}", key=f"{
+                                 delete_key}_{pdf_file.name}")
             if delete:
                 page_selection.append(page_number)
         with col2:
