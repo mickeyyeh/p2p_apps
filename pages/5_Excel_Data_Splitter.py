@@ -251,8 +251,7 @@ def main() -> None:
             with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as myzip:
                 for idx, df_export_file in enumerate(df_sliced):
                     # Setting name with appended values
-                    export_file_name = f"{file_name} lines {
-                        names_to_append[idx]}.xlsx"
+                    export_file_name = f"{file_name} lines {names_to_append[idx]}.xlsx"
                     # Export files
                     excel_buffer = io.BytesIO()
                     df_export_file.to_excel(
