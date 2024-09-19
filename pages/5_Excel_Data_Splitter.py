@@ -230,8 +230,7 @@ def main() -> None:
 
         num_of_files = len(df) // num_of_rows + \
             (1 if len(df) % num_of_rows != 0 else 0)
-        st.sidebar.write(f"After splitting, you will have {
-                         num_of_files} files in total.")
+        st.sidebar.write(f"After splitting, you will have {num_of_files} files in total.")
         # Call the row splitter function
         row_splitter(num_of_rows, df)
 
