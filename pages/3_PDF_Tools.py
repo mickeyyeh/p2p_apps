@@ -417,6 +417,9 @@ def split_pdf(
     elif pages_to_keep is not None:
         for page_number in pages_to_keep:
             writer.insert_pdf(pdf_document, from_page=page_number - 1, to_page=page_number - 1)
+    else:
+        # If no pages are specified, include all pages
+        writer.insert_pdf(pdf_document)
 
     split_pdf_bytes = io.BytesIO()
     writer.save(split_pdf_bytes)
@@ -534,6 +537,12 @@ def main() -> None:
 
             num_pages = len(fitz.open(stream=pdf_content, filetype="pdf"))
 
+            # Preview the uploaded PDF
+            st.write("### Preview of Uploaded PDF")
+            uploaded_preview_images = preview_pdf_content(pdf_content)
+            for page_num, img in uploaded_preview_images:
+                st.image(img, caption=f"Page {page_num}", use_column_width=True)
+
             # Let the user choose between excluding or selecting specific pages
             split_option = st.radio(
                 "How would you like to split the PDF?",
@@ -547,7 +556,7 @@ def main() -> None:
                     format_func=lambda x: f"Page {x}"
                 )
 
-                if st.button("Split PDF") and exclude_pages:
+                if st.button("Split PDF"):
                     st.write(f"Excluding pages: {exclude_pages}")
                     pdf_bytes = split_pdf(
                         pdf_content, exclude_pages=exclude_pages
@@ -573,7 +582,7 @@ def main() -> None:
                     format_func=lambda x: f"Page {x}"
                 )
 
-                if st.button("Download Selected Pages") and pages_to_keep:
+                if st.button("Split PDF"):
                     st.write(f"Downloading selected pages: {pages_to_keep}")
                     pdf_bytes = split_pdf(
                         pdf_content, pages_to_keep=pages_to_keep
