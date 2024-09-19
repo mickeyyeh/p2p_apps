@@ -460,6 +460,37 @@ def merge_pdfs_from_images(images: List[Tuple[str, int, Image.Image]]) -> Option
         return None
 
 
+def split_pdf(
+    pdf_content: bytes,
+    pages_to_keep: Optional[List[int]] = None,
+    exclude_pages: Optional[List[int]] = None
+) -> bytes:
+    pdf_document = fitz.open(stream=pdf_content, filetype="pdf")
+    num_pages = len(pdf_document)
+
+    writer = fitz.open()
+
+    if exclude_pages is not None:
+        for page_number in range(num_pages):
+            if (page_number + 1) not in exclude_pages:
+                writer.insert_pdf(
+                    pdf_document, from_page=page_number, to_page=page_number)
+    elif pages_to_keep is not None:
+        for page_number in pages_to_keep:
+            writer.insert_pdf(
+                pdf_document, from_page=page_number - 1, to_page=page_number - 1)
+    else:
+        # If no pages are specified, include all pages
+        writer.insert_pdf(pdf_document)
+
+    split_pdf_bytes = io.BytesIO()
+    writer.save(split_pdf_bytes)
+    writer.close()
+    split_pdf_bytes.seek(0)
+
+    return split_pdf_bytes.getvalue()
+    
+
 def preview_pdf_pages(pdf_file: IO[bytes], source_file_name: str) -> List[Tuple[str, int, Image.Image]]:
     """
     Convert PDF pages to images for preview.
