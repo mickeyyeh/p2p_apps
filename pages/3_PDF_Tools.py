@@ -290,8 +290,7 @@ def main() -> None:
                 st.write("### Final Preview")
                 # Display images in a scrollable container
                 for page_num, img in all_images:
-                    st.image(img, caption=f"Page {
-                             page_num}", use_column_width=True)
+                    st.image(img, caption=f"Page {page_num}", use_column_width=True)
 
                 if st.button("Merge PDFs"):
                     # Create temporary PDFs from the preview images
