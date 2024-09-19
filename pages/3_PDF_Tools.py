@@ -473,7 +473,7 @@ def preview_pdf_pages(pdf_file: IO[bytes], source_file_name: str) -> List[Tuple[
     """
     pdf_document = fitz.open(stream=pdf_file.read(), filetype="pdf")
     images: List[Tuple[str, int, Image.Image]] = []
-    dpi = 100  # Lower DPI for faster rendering and smaller images
+    dpi = 200  # Lower DPI for faster rendering and smaller images
 
     for page_number in range(len(pdf_document)):
         page = pdf_document.load_page(page_number)
@@ -669,7 +669,7 @@ def preview_pdf_content(pdf_bytes: bytes) -> List[Tuple[int, Image.Image]]:
     # Convert PDF bytes to images for preview
     pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
     images: List[Tuple[int, Image.Image]] = []
-    dpi = 100  # Lower DPI as needed
+    dpi = 200  # Lower DPI as needed
 
     for page_number in range(len(pdf_document)):
         page = pdf_document.load_page(page_number)
