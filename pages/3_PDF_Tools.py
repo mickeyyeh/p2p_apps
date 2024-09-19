@@ -614,10 +614,10 @@
 # if __name__ == "__main__":
 #     main()
 
+
 import streamlit as st
 import fitz  # PyMuPDF
 import io
-import base64
 from PIL import Image
 from typing import List, Optional, IO, Tuple
 
@@ -674,7 +674,7 @@ def preview_pdf_pages(pdf_file: IO[bytes], sort_order: str) -> List[Tuple[int, I
     # Convert PDF to images for preview with specified DPI
     pdf_document = fitz.open(stream=pdf_file.read(), filetype="pdf")
     images: List[Tuple[int, Image.Image]] = []
-    dpi = 100  # Adjust DPI for faster rendering
+    dpi = 72  # Lower DPI for faster rendering and smaller images
 
     for page_number in range(len(pdf_document)):
         page = pdf_document.load_page(page_number)
@@ -698,7 +698,7 @@ def preview_pdf_content(pdf_bytes: bytes) -> List[Tuple[int, Image.Image]]:
     # Convert PDF bytes to images for preview
     pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
     images: List[Tuple[int, Image.Image]] = []
-    dpi = 100  # Adjust DPI as needed
+    dpi = 72  # Lower DPI for faster rendering and smaller images
 
     for page_number in range(len(pdf_document)):
         page = pdf_document.load_page(page_number)
@@ -709,26 +709,10 @@ def preview_pdf_content(pdf_bytes: bytes) -> List[Tuple[int, Image.Image]]:
     return images
 
 
-def display_images_in_scrollable_container(images: List[Tuple[int, Image.Image]], caption_prefix: str):
-    image_html = ""
-    for page_num, img in images:
-        buffered = io.BytesIO()
-        img.save(buffered, format="PNG")
-        img_str = base64.b64encode(buffered.getvalue()).decode()
-        image_html += f"""
-            <div style='text-align:center; margin-bottom:10px;'>
-                <img src='data:image/png;base64,{img_str}' style='max-width:100%; height:auto;'/>
-                <p>{caption_prefix} - Page {page_num}</p>
-            </div>
-        """
-    st.markdown(
-        f"""
-        <div style='height:500px; overflow-y: scroll; border:1px solid #ccc; padding:10px;'>
-            {image_html}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+def display_images_in_expander(images: List[Tuple[int, Image.Image]], caption_prefix: str):
+    with st.expander("Click to view preview"):
+        for page_num, img in images:
+            st.image(img, caption=f"{caption_prefix} - Page {page_num}", use_column_width=True)
 
 
 def main() -> None:
@@ -759,7 +743,7 @@ def main() -> None:
 
             if all_images:
                 st.write("### Final Preview Before Merging")
-                display_images_in_scrollable_container(all_images, "Page")
+                display_images_in_expander(all_images, "Page")
 
                 if st.button("Merge PDFs"):
                     # Create temporary PDFs from the preview images
@@ -777,7 +761,7 @@ def main() -> None:
                         # Preview the merged PDF
                         st.write("### Preview of Merged PDF")
                         merged_preview_images = preview_pdf_content(merged_pdf_bytes)
-                        display_images_in_scrollable_container(merged_preview_images, "Merged PDF")
+                        display_images_in_expander(merged_preview_images, "Merged PDF")
 
                         st.download_button(
                             label="Download Merged PDF",
@@ -800,7 +784,7 @@ def main() -> None:
             # Preview the uploaded PDF
             st.write("### Preview of Uploaded PDF")
             uploaded_preview_images = preview_pdf_content(pdf_content)
-            display_images_in_scrollable_container(uploaded_preview_images, "Page")
+            display_images_in_expander(uploaded_preview_images, "Page")
 
             # Let the user choose between excluding or selecting specific pages
             split_option = st.radio(
@@ -824,7 +808,7 @@ def main() -> None:
                     # Preview the split PDF
                     st.write("### Preview of Split PDF")
                     split_preview_images = preview_pdf_content(pdf_bytes)
-                    display_images_in_scrollable_container(split_preview_images, "Split PDF")
+                    display_images_in_expander(split_preview_images, "Split PDF")
 
                     st.download_button(
                         label="Download All Except Specified Pages",
@@ -849,7 +833,7 @@ def main() -> None:
                     # Preview the split PDF
                     st.write("### Preview of Selected Pages PDF")
                     split_preview_images = preview_pdf_content(pdf_bytes)
-                    display_images_in_scrollable_container(split_preview_images, "Split PDF")
+                    display_images_in_expander(split_preview_images, "Split PDF")
 
                     st.download_button(
                         label="Download Selected Pages PDF",
