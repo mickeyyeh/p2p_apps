@@ -37,7 +37,7 @@ def process_excel_files(excel_files_list):
 
 def main():
     st.title("USPS Zone Converter")
-    st.write("Link to USPS Official Zone Chart Database: https://postcalc.usps.com/DomesticZoneChart)
+    st.write("Link to USPS Official Zone Chart Database: https://postcalc.usps.com/DomesticZoneChart")
 
     # Upload Excel files
     uploaded_files = st.file_uploader(
