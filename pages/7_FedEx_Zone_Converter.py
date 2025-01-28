@@ -98,12 +98,10 @@ if uploaded_files:
         towrite = io.BytesIO()
         try:
             with pd.ExcelWriter(towrite, engine='openpyxl') as writer:
-                transformed_df.to_excel(
-                    writer, index=False, sheet_name='Transformed')
+                transformed_df.to_excel(writer, index=False, sheet_name='Transformed')
             towrite.seek(0)
         except Exception as e:
-            st.error(f"Error converting transformed data to Excel for `{
-                     uploaded_file.name}`: {e}")
+            st.error(f"Error converting transformed data to Excel for `{uploaded_file.name}`: {e}")
             continue
 
         # Create a download button
