@@ -58,7 +58,8 @@ st.write("""
     Upload one or multiple Excel (`.xlsx`) or CSV (`.csv`) FedEx zone files.
     The app will process each file and provide a transformed version for download.
 """)
-st.write("Official FedEx Zone Chart Link: https://fxfzonelocator.van.fedex.com/")
+st.write("Official FedEx PARCEL Zone Chart Link: https://www.fedex.com/ratetools/RateToolsMain.do")
+st.write("Official FedEx FREIGHT (FTL/LTL) Zone Chart Link: https://fxfzonelocator.van.fedex.com/")
 
 # File uploader allows multiple files and accepts .xlsx and .csv
 uploaded_files = st.file_uploader(
