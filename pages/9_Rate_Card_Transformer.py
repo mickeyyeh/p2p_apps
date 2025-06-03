@@ -31,9 +31,9 @@ def transform_data(df: pd.DataFrame, multiplier: float = 1) -> Union[pd.DataFram
 
     # Check if file has 15.99 oz
     if (df['Weight'].astype(float) >= 0.996).any() and (df['Weight'].astype(float) <= 1).any():
-        st.write('File has 15.99 oz weight')
+        st.write('Note: File has 15.99 oz weight')
     else:
-        st.write('File does NOT have 15.99 oz weight')
+        st.write('Note: File does NOT have 15.99 oz weight')
 
     ## -- Weight Transformation Starts Here --##
     if 'Weight Min' in df.columns or 'Weight Max' in df.columns:
