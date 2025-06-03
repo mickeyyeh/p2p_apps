@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import re
 import io
-from typing import Optional
+from typing import Union
 
 
 # Function to round up numbers
@@ -26,7 +26,7 @@ def parse_multiplier(multiplier: str) -> float:
 # Function to transform data
 
 
-def transform_data(df: pd.DataFrame, multiplier: float = 1) -> Optional[pd.DataFrame]:
+def transform_data(df: pd.DataFrame, multiplier: float = 1) -> Union[pd.DataFrame, None]:
     """Transforms the input data based on the specified rules."""
 
     # Check if file has 15.99 oz
