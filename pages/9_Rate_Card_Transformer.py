@@ -3,10 +3,10 @@ import pandas as pd
 import numpy as np
 import re
 import io
+from typing import Optional
+
 
 # Function to round up numbers
-
-
 def round_up(n: float, decimals: int = 0) -> float:
     """Rounds up a number to the specified number of decimal places."""
     import math
@@ -26,7 +26,7 @@ def parse_multiplier(multiplier: str) -> float:
 # Function to transform data
 
 
-def transform_data(df: pd.DataFrame, multiplier: float = 1) -> pd.DataFrame | None:
+def transform_data(df: pd.DataFrame, multiplier: float = 1) -> Optional[pd.DataFrame]:
     """Transforms the input data based on the specified rules."""
 
     # Check if file has 15.99 oz
