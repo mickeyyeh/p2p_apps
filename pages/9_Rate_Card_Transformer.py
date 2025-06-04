@@ -96,8 +96,8 @@ def transform_data(df: pd.DataFrame, multiplier: float = 1) -> Union[pd.DataFram
         mask2 = (df['Weight Min'] == 0) & (df['Weight Max'] == 1)
         mask6 = df['Weight Max'] > 1
 
-        df.loc[mask2, 'Weight Max'] = df.loc[mask2, 'Weight Max'] - 0.001
-        df.loc[mask6, 'Weight Max'] = df.loc[mask6, 'Weight Max'] - 0.001
+        df.loc[mask2, 'Weight Max'] = df.loc[mask2, 'Weight Max']
+        df.loc[mask6, 'Weight Max'] = df.loc[mask6, 'Weight Max']
 
         # Melt the DataFrame to transform zone columns into rows
         zone_cols = df.columns[2:-2]
