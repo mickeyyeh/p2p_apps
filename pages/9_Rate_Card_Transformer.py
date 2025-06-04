@@ -11,7 +11,7 @@ def round_up(n: float, decimals: int = 0) -> float:
     """Rounds up a number to the specified number of decimal places."""
     import math
     multiplier = 10 ** decimals
-    return math.ceil(n * multiplier) / multiplier
+    return math.ceil(float(n) * multiplier) / multiplier
 
 # Function to parse multiplier input
 
