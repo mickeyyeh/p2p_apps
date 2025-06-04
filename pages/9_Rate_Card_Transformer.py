@@ -124,7 +124,7 @@ def transform_data(df: pd.DataFrame, multiplier: float = 1) -> Union[pd.DataFram
 
         # Apply multiplier to Rate column
         transformed_df['Rate'] = transformed_df['Rate'].apply(
-            lambda x: round_up(x * multiplier, 2))
+            lambda x: round_up(float(x) * multiplier, 2))
 
         # Drop rows where Weight Min is 1.0009
         transformed_df = transformed_df[transformed_df['Weight Min'] != 1.0009]
