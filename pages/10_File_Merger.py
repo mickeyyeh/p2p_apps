@@ -1,7 +1,9 @@
 import streamlit as st
 import pandas as pd
+
 import io
 import re
+from typing import Union
 
 
 # def color_columns(val: str, data_columns: list[str]) -> str:
@@ -9,7 +11,7 @@ import re
 #     return f'background-color: {color}'
 
 
-def find_tracking_column(columns: list[str]) -> str | None:
+def find_tracking_column(columns: list[str]) -> Union[str, None]:
     tracking_keywords = ['tracking', 'track', 'awb', 'tracking number']
     for column in columns:
         if any(re.search(keyword, column, re.IGNORECASE) for keyword in tracking_keywords):
