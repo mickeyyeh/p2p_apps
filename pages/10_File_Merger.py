@@ -20,7 +20,7 @@ def find_tracking_column(columns: list[str]) -> Union[str, None]:
 
 
 def main() -> None:
-    st.title("Invoice Data Enrichment App")
+    st.title("Add SETA Columns")
 
     # File upload section
     st.header("Upload Files")
