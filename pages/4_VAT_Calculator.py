@@ -171,9 +171,9 @@ def main() -> None:
             st.write(df)
 
             if uploaded_file.name.endswith('.csv'):
-                default_filename: str = uploaded_file.name.replace('.csv', '_VAT_ADDED.xlsx')
+                default_filename: str = uploaded_file.name.replace('.csv', '_VAT_ADDED')
             else:
-                default_filename = uploaded_file.name.replace('.xlsx', '_VAT_ADDED.xlsx')
+                default_filename = uploaded_file.name.replace('.xlsx', '_VAT_ADDED')
                 
             file_name: str = st.text_input("Enter filename", value=default_filename)
 
