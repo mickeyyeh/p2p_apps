@@ -85,17 +85,14 @@ def main() -> None:
         # Download section
         st.header("Download")
         if invoice_file.name.endswith('.csv'):
-            default_filename: str = invoice_file.name.replace(
-                '.csv', '_customer_added.xlsx')
+            default_filename: str = invoice_file.name.replace('.csv', '_customer_added')
         else:
-            default_filename = invoice_file.name.replace(
-                '.xlsx', '_customer_added.xlsx')
+            default_filename = invoice_file.name.replace('.xlsx', '_customer_added')
         filename: str = st.text_input("Enter filename", value=default_filename)
         output = io.BytesIO()
         merged_df.to_excel(output, index=False)
         output.seek(0)
-        st.download_button(label="Download File", data=output.getvalue(
-        ), file_name=filename, mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        st.download_button(label="Download File", data=output.getvalue(), file_name=f'{filename}.xlsx', mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 
 if __name__ == "__main__":
