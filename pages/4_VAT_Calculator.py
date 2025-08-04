@@ -170,10 +170,10 @@ def main() -> None:
             st.subheader("User Inputs")
             st.write(df)
 
-            if invoice_file.name.endswith('.csv'):
-                default_filename: str = invoice_file.name.replace('.csv', '_VAT_ADDED.xlsx')
+            if uploaded_file.name.endswith('.csv'):
+                default_filename: str = uploaded_file.name.replace('.csv', '_VAT_ADDED.xlsx')
             else:
-                default_filename = invoice_file.name.replace('.xlsx', '_VAT_ADDED.xlsx')
+                default_filename = uploaded_file.name.replace('.xlsx', '_VAT_ADDED.xlsx')
                 
             file_name: str = st.text_input("Enter filename", value=default_filename)
 
