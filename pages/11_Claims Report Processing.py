@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+
+from datetime import datetime
 import io
 from typing import Optional, List, Dict, Any
 
@@ -115,19 +117,42 @@ def main() -> None:
                 total_prices.append(total_value)
 
             # Add new columns to DataFrame
-            df["Description"] = descriptions
+            df["Item Description"] = descriptions
             df["Qty"] = quantities
             df["Price"] = prices
-            df["totalprice"] = total_prices
+            df["Total Price"] = total_prices
+
+            # Ensure latestTrackingEventDate is parsed as datetime
+            df["latestTrackingEventDate"] = pd.to_datetime(
+                df["latestTrackingEventDate"], errors="coerce")
+
+            # Calculate days since last scan
+            today = datetime.today()
+            df["daysSinceLastScan"] = (today -
+                                       df["latestTrackingEventDate"]).dt.days
+
+            # drop listItems column
+            df_final = df.drop(columns=["listItems"])
+
+            # order final columns
+            df_final = df_final[[
+                "dateAdded", "customerName", "daysSinceLastScan",
+                "serviceName", "trackingNumber", "latestTrackingEventName",
+                "latestTrackingEventDate", "weight", "weightUnit", "dim1",
+                "dim2", "dim3", "Item Description", "Qty", "Price",
+                "Total Price"
+            ]]
 
             # Show preview of processed data
             st.subheader("Processed Data Preview")
-            st.dataframe(df.head())
+            st.dataframe(df_final.head())
 
             # Convert DataFrame to Excel for download
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                df.to_excel(writer, index=False, sheet_name='ProcessedData')
+                df_final.to_excel(writer,
+                                  index=False,
+                                  sheet_name='ProcessedData')
             output.seek(0)
 
             # Allow user to specify the file name for download
