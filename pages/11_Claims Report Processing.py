@@ -131,14 +131,16 @@ def main() -> None:
             df["daysSinceLastScan"] = (today -
                                        df["latestTrackingEventDate"]).dt.days
 
-            # drop & re-order listItems column
-            df_final = df[[
+            # order final columns
+            wanted_cols = [
                 "dateAdded", "customerName", "daysSinceLastScan",
                 "serviceName", "trackingNumber", "latestTrackingEventName",
                 "latestTrackingEventDate", "weight", "weightUnit", "dim1",
                 "dim2", "dim3", "Item Description", "Qty", "Price",
                 "Total Price"
-            ]]
+            ]
+
+            df_final = df[wanted_cols]
 
             # Show preview of processed data
             st.subheader("Processed Data Preview")
