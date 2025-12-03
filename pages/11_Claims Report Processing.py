@@ -2,8 +2,9 @@ import streamlit as st
 import pandas as pd
 
 from datetime import datetime
-import io
 from typing import Optional, List, Dict, Any
+import io
+import math
 
 
 # ---------------------------------------------------------
@@ -82,6 +83,15 @@ def getFile(uploaded_file: Optional[
 
 
 # ---------------------------------------------------------
+# Function to round a value half up
+# ---------------------------------------------------------
+def roundUp(number, ndigits=0):
+    """Round half up"""
+    multiplier = 10**ndigits
+    return math.floor(number * multiplier + 0.5) / multiplier
+
+
+# ---------------------------------------------------------
 # Main Streamlit App
 # ---------------------------------------------------------
 def main() -> None:
@@ -121,6 +131,8 @@ def main() -> None:
             df["Qty"] = quantities
             df["Price"] = prices
             df["Total Price"] = total_prices
+            df["Total Price"] = df["Total Price"].apply(
+                lambda x: roundUp(x, 2))
 
             # Ensure latestTrackingEventDate is parsed as datetime
             df["latestTrackingEventDate"] = pd.to_datetime(
@@ -130,6 +142,9 @@ def main() -> None:
             today = datetime.today()
             df["daysSinceLastScan"] = (today -
                                        df["latestTrackingEventDate"]).dt.days
+
+            # drop & re-order listItems column
+            # df_final = df.drop(columns=["listItems"])
 
             # order final columns
             wanted_cols = [
