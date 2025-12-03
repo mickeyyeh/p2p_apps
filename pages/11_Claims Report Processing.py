@@ -131,11 +131,8 @@ def main() -> None:
             df["daysSinceLastScan"] = (today -
                                        df["latestTrackingEventDate"]).dt.days
 
-            # drop listItems column
-            df_final = df.drop(columns=["listItems"])
-
-            # order final columns
-            df_final = df_final[[
+            # drop & re-order listItems column
+            df_final = df[[
                 "dateAdded", "customerName", "daysSinceLastScan",
                 "serviceName", "trackingNumber", "latestTrackingEventName",
                 "latestTrackingEventDate", "weight", "weightUnit", "dim1",
