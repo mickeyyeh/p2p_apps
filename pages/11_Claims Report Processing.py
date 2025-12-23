@@ -138,10 +138,10 @@ def main() -> None:
             df["latestTrackingEventDate"] = pd.to_datetime(
                 df["latestTrackingEventDate"], errors="coerce")
 
-            # Calculate days since last scan
-            today = datetime.today()
-            df["daysSinceLastScan"] = (today -
-                                       df["latestTrackingEventDate"]).dt.days
+            # Calculate days since last scan (David is calculating it already)
+            # today = datetime.today()
+            # df["daysSinceLastScan"] = (today -
+            #                            df["latestTrackingEventDate"]).dt.days
 
             # drop & re-order listItems column
             # df_final = df.drop(columns=["listItems"])
