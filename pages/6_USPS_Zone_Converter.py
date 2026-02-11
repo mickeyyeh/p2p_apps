@@ -6,8 +6,6 @@ import tempfile
 import io
 
 # Function to process Excel files
-
-
 def process_excel_files(excel_files_list):
     updated_df_list = []
     for excelfile in excel_files_list:
@@ -24,24 +22,31 @@ def process_excel_files(excel_files_list):
                 if '---' in str(zip_code):
                     start, end = zip_code.split('---')
                     for z in range(int(start), int(end) + 1):
-                        processed_data = processed_data.append(
-                            {'ZipCode': str(z).zfill(3), 'Zone': zone}, ignore_index=True)
+                        new_row = pd.DataFrame(
+                            [{'ZipCode': str(z).zfill(3), 'Zone': zone}]
+                        )
+                        processed_data = pd.concat(
+                            [processed_data, new_row], ignore_index=True
+                        )
                 else:
-                    processed_data = processed_data.append(
-                        {'ZipCode': str(zip_code).zfill(3), 'Zone': zone}, ignore_index=True)
+                    new_row = pd.DataFrame(
+                        [{'ZipCode': str(zip_code).zfill(3), 'Zone': zone}]
+                    )
+                    processed_data = pd.concat(
+                        [processed_data, new_row], ignore_index=True
+                    )
         updated_df_list.append(processed_data)
     return updated_df_list
 
 # Main Streamlit app
-
-
 def main():
     st.title("USPS Zone Converter")
     st.write("Link to USPS Official Zone Chart Database: https://postcalc.usps.com/DomesticZoneChart")
 
     # Upload Excel files
     uploaded_files = st.file_uploader(
-        "Upload Excel files", type="xlsx", accept_multiple_files=True)
+        "Upload Excel files", type="xlsx", accept_multiple_files=True
+    )
 
     if uploaded_files:
         # Process files
