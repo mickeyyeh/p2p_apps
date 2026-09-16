@@ -97,6 +97,108 @@ def misc_col_name(base: str, index: int) -> str:
     return base if index == 0 else f"{base}.{index}"
 
 
+# --- Get Dimensions & Dim Factor helpers -----------------------------------
+
+
+def compute_final_dimensions(df: pd.DataFrame) -> pd.Series:
+    """ADJUSTED DIMENSIONS wins when present; otherwise fall back to ORIGINAL DIMENSIONS."""
+    adjusted = df["ADJUSTED DIMENSIONS"]
+    original = df["ORIGINAL DIMENSIONS"]
+    has_adjusted = adjusted.notna() & (adjusted.astype(str).str.strip() != "")
+    return adjusted.where(has_adjusted, original)
+
+
+def split_final_dimensions(series: pd.Series):
+    """Split 'L x W x H' strings (e.g. '16.0x 12.0x 12.0') into three Series."""
+    length_vals, width_vals, height_vals = [], [], []
+    for val in series:
+        if pd.isna(val) or str(val).strip() == "":
+            length_vals.append("")
+            width_vals.append("")
+            height_vals.append("")
+            continue
+        parts = [
+            p.strip() for p in re.split(r"[xX]", str(val)) if p.strip() != ""
+        ]
+        length_vals.append(parts[0] if len(parts) > 0 else "")
+        width_vals.append(parts[1] if len(parts) > 1 else "")
+        height_vals.append(parts[2] if len(parts) > 2 else "")
+    return (
+        pd.Series(length_vals, index=series.index),
+        pd.Series(width_vals, index=series.index),
+        pd.Series(height_vals, index=series.index),
+    )
+
+
+def add_final_dimension_columns(df: pd.DataFrame):
+    """Insert FINAL DIMENSIONS, Dim Length, Dim Width, Dim Height right after
+    whichever of ADJUSTED/ORIGINAL DIMENSIONS appears later in the file."""
+    if "ADJUSTED DIMENSIONS" not in df.columns or "ORIGINAL DIMENSIONS" not in df.columns:
+        return df, False
+
+    work = df.copy()
+    final_dim = compute_final_dimensions(work)
+    length, width, height = split_final_dimensions(final_dim)
+
+    insert_pos = (max(
+        work.columns.get_loc("ADJUSTED DIMENSIONS"),
+        work.columns.get_loc("ORIGINAL DIMENSIONS"),
+    ) + 1)
+    cols = list(work.columns)
+    before_cols, after_cols = cols[:insert_pos], cols[insert_pos:]
+
+    new_cols_df = pd.DataFrame(
+        {
+            "FINAL DIMENSIONS": final_dim,
+            "Dim Length": length,
+            "Dim Width": width,
+            "Dim Height": height,
+        },
+        index=work.index,
+    )
+    result = pd.concat([work[before_cols], new_cols_df, work[after_cols]],
+                       axis=1)
+    return result, True
+
+
+def compute_dim_divisor(service_series: pd.Series, ground_divisor,
+                        intl_divisor, other_divisor) -> pd.Series:
+    """Ground/SurePost -> ground_divisor; International -> intl_divisor; else -> other_divisor.
+    Keyword matching is case-insensitive. Blank/missing SERVICE values stay blank."""
+
+    def classify(val):
+        if pd.isna(val) or str(val).strip() == "":
+            return ""
+        v = str(val).lower()
+        if "ground" in v or "surepost" in v:
+            return ground_divisor
+        if "international" in v:
+            return intl_divisor
+        return other_divisor
+
+    return service_series.apply(classify)
+
+
+def add_dim_divisor_column(df: pd.DataFrame, ground_divisor, intl_divisor,
+                           other_divisor):
+    """Insert Dim Divisor right after SERVICE."""
+    if "SERVICE" not in df.columns:
+        return df, False
+
+    work = df.copy()
+    divisor_series = compute_dim_divisor(work["SERVICE"], ground_divisor,
+                                         intl_divisor, other_divisor)
+    insert_pos = work.columns.get_loc("SERVICE") + 1
+    cols = list(work.columns)
+    before_cols, after_cols = cols[:insert_pos], cols[insert_pos:]
+
+    new_col_df = pd.DataFrame({"Dim Divisor": divisor_series},
+                              index=work.index)
+    result = pd.concat([work[before_cols], new_col_df, work[after_cols]],
+                       axis=1)
+    return result, True
+
+
 def load_file(uploaded_file) -> pd.DataFrame:
     name = uploaded_file.name.lower()
     if name.endswith(".csv"):
@@ -195,6 +297,7 @@ selected_columns = st.multiselect(
     default=default_selected,
 )
 
+edited_labels = None
 if selected_columns:
     st.subheader("2. Confirm MISC CHARGE DESCRIPTION labels")
     st.caption("Edit any label before processing if needed.")
@@ -214,26 +317,85 @@ if selected_columns:
         key="label_editor",
     )
 
-    if st.button("Process file", type="primary"):
+st.subheader("3. Get Dimensions and Dim Factor")
+include_dim_step = st.checkbox(
+    "Include this step (creates FINAL DIMENSIONS, Dim Length, Dim Width, Dim Height, and Dim Divisor)",
+    value=True,
+)
+
+has_dim_cols = "ADJUSTED DIMENSIONS" in all_columns and "ORIGINAL DIMENSIONS" in all_columns
+has_service_col = "SERVICE" in all_columns
+
+ground_divisor = intl_divisor = other_divisor = None
+if include_dim_step:
+    if not has_dim_cols:
+        st.warning(
+            "'ADJUSTED DIMENSIONS' and/or 'ORIGINAL DIMENSIONS' not found — "
+            "FINAL DIMENSIONS / Dim Length / Dim Width / Dim Height will be skipped."
+        )
+    if not has_service_col:
+        st.warning("'SERVICE' column not found — Dim Divisor will be skipped.")
+
+    if has_service_col:
+        st.caption("Dim Divisor values by service type — edit if needed.")
+        divisor_df = pd.DataFrame({
+            "Service Category":
+            ["Ground / SurePost", "International", "Other"],
+            "Dim Divisor": [300, 139, 250],
+        })
+        edited_divisors = st.data_editor(
+            divisor_df,
+            hide_index=True,
+            use_container_width=True,
+            disabled=["Service Category"],
+            key="divisor_editor",
+        )
+        ground_divisor = edited_divisors.loc[
+            edited_divisors["Service Category"] == "Ground / SurePost",
+            "Dim Divisor"].iloc[0]
+        intl_divisor = edited_divisors.loc[
+            edited_divisors["Service Category"] == "International",
+            "Dim Divisor"].iloc[0]
+        other_divisor = edited_divisors.loc[
+            edited_divisors["Service Category"] == "Other",
+            "Dim Divisor"].iloc[0]
+
+if st.button("Process file", type="primary"):
+    work_df = df.copy()
+
+    if include_dim_step and has_dim_cols:
+        work_df, _ = add_final_dimension_columns(work_df)
+    if include_dim_step and has_service_col:
+        work_df, _ = add_dim_divisor_column(work_df, ground_divisor,
+                                            intl_divisor, other_divisor)
+
+    if selected_columns and edited_labels is not None:
         labels_by_column = dict(
             zip(edited_labels["Source Column"],
                 edited_labels["MISC CHARGE DESCRIPTION"]))
-        result_df, pair_count = build_transformed_df(df, selected_columns,
+        result_df, pair_count = build_transformed_df(work_df, selected_columns,
                                                      labels_by_column)
-        st.session_state["result_df"] = result_df
-        st.session_state["pair_count"] = pair_count
+    else:
+        result_df, pair_count = work_df, 0
+
+    st.session_state["result_df"] = result_df
+    st.session_state["pair_count"] = pair_count
 
 if "result_df" in st.session_state:
     result_df = st.session_state["result_df"]
 
-    st.subheader("3. Preview")
+    st.subheader("4. Preview")
     st.dataframe(result_df.head(50), use_container_width=True)
+    pair_count = st.session_state["pair_count"]
+    pair_note = (
+        f"{pair_count} MISC CHARGE DESCRIPTION / MISC NET AMOUNT pairs (0 to {pair_count - 1})"
+        if pair_count > 0 else
+        "no MISC CHARGE DESCRIPTION / MISC NET AMOUNT pairs created")
     st.caption(
-        f"{result_df.shape[0]} rows x {result_df.shape[1]} columns — "
-        f"{st.session_state['pair_count']} MISC CHARGE DESCRIPTION / MISC NET AMOUNT pairs "
-        f"(0 to {st.session_state['pair_count'] - 1})")
+        f"{result_df.shape[0]} rows x {result_df.shape[1]} columns — {pair_note}"
+    )
 
-    st.subheader("4. Download")
+    st.subheader("5. Download")
     original_stem = Path(uploaded_file.name).stem
     original_ext = Path(uploaded_file.name).suffix or ".xlsx"
     default_filename = f"{original_stem}_transformed{original_ext}"
