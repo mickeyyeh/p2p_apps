@@ -199,7 +199,8 @@ def add_dim_divisor_column(df: pd.DataFrame, ground_divisor, intl_divisor,
     return result, True
 
 
-def load_file(uploaded_file) -> pd.DataFrame:
+# CHANGED: added sheet_name=None to the signature
+def load_file(uploaded_file, sheet_name=None) -> pd.DataFrame:
     name = uploaded_file.name.lower()
     if name.endswith(".csv"):
         raw = uploaded_file.read()
@@ -207,7 +208,8 @@ def load_file(uploaded_file) -> pd.DataFrame:
         # Auto-detect pipe- vs comma-delimited CSVs.
         delimiter = "|" if sample.count("|") > sample.count(",") else ","
         return pd.read_csv(io.BytesIO(raw), delimiter=delimiter, dtype=str)
-    return pd.read_excel(uploaded_file, dtype=str)
+    # CHANGED: reads the selected tab; falls back to the first tab if none is given
+    return pd.read_excel(uploaded_file, sheet_name=sheet_name or 0, dtype=str)
 
 
 def build_transformed_df(source_df, selected_columns, labels_by_column):
