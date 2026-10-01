@@ -270,14 +270,33 @@ if uploaded_file is None:
     st.info("Upload a CSV or Excel file to begin.")
     st.stop()
 
-# Reset downstream state if a new file is uploaded.
-if st.session_state.get("_uploaded_name") != uploaded_file.name:
-    st.session_state["_uploaded_name"] = uploaded_file.name
+# NEW: sheet picker (Excel only; CSVs have no tabs)
+sheet_name = None
+if not uploaded_file.name.lower().endswith(".csv"):
+    # NEW: read tab names only, no sheet data loaded yet
+    sheet_names = pd.ExcelFile(uploaded_file).sheet_names
+    uploaded_file.seek(0)  # NEW: rewind so load_file can read the file again
+
+    # NEW: default to the first tab; show the dropdown only if there are several
+    sheet_name = sheet_names[0]
+    if len(sheet_names) > 1:
+        sheet_name = st.selectbox(
+            "Select sheet",
+            sheet_names,
+            key=f"sheet_{uploaded_file.name}",  # NEW: resets the dropdown for each new file
+        )
+
+# CHANGED: reset key is now (file, sheet), so switching tabs also clears old results
+upload_key = (uploaded_file.name, sheet_name)
+if st.session_state.get("_upload_key") != upload_key:
+    st.session_state["_upload_key"] = upload_key
     st.session_state.pop("result_df", None)
 
-df = load_file(uploaded_file)
+df = load_file(uploaded_file, sheet_name)  # CHANGED: passes the selected sheet
 st.success(
-    f"Loaded **{uploaded_file.name}** — {df.shape[0]} rows, {df.shape[1]} columns"
+    f"Loaded **{uploaded_file.name}**"
+    + (f" (sheet: **{sheet_name}**)" if sheet_name else "")  # NEW: shows the sheet
+    + f" — {df.shape[0]} rows, {df.shape[1]} columns"
 )
 
 all_columns = list(df.columns)
