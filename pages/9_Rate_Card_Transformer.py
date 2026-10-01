@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import re
 import io
+import os
 from typing import Union
 
 
@@ -136,28 +137,48 @@ def transform_data(df: pd.DataFrame, multiplier: float = 1) -> Union[pd.DataFram
             "Column names 'Weight' or 'Unit' not found. Please check the column names in your file.")
         return None
 
-# Main function
+
+import os  # add at top of file
+
+
+# Moved to module level so it isn't redefined on every rerun
+@st.cache_data
+def convert_df_to_excel(df: pd.DataFrame) -> bytes:
+    """Converts a DataFrame to Excel format."""
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False)
+    return output.getvalue()
 
 
 def main() -> None:
     """The main function that runs the Streamlit app."""
     st.title("Data Transformation App")
-    uploaded_files = st.file_uploader("Upload CSV or Excel files", type=[
-                                      "csv", "xlsx"], accept_multiple_files=True)
+    uploaded_files = st.file_uploader(
+        "Upload CSV or Excel files",
+        type=["csv", "xlsx"],
+        accept_multiple_files=True,
+    )
 
     if uploaded_files:
-        transformed_df_list = []
         original_df_list = []
         transformed_file_name = []
-        for uploaded_file in uploaded_files:
+
+        for i, uploaded_file in enumerate(uploaded_files):
             try:
                 if uploaded_file.name.endswith(".csv"):
                     df = pd.read_csv(uploaded_file)
                 else:
-                    df = pd.read_excel(
-                        uploaded_file, index_col=None, engine="openpyxl")
+                    xl = pd.ExcelFile(uploaded_file, engine="openpyxl")
+                    sheet = xl.sheet_names[0]
+                    if len(xl.sheet_names) > 1:
+                        sheet = st.selectbox(
+                            f"Select sheet for {uploaded_file.name}",
+                            xl.sheet_names,
+                            key=f"sheet_{i}_{uploaded_file.name}",
+                        )
+                    df = xl.parse(sheet, index_col=None)
 
-                # Convert the 'unit' column to string type if it exists
                 if 'unit' in df.columns:
                     df['unit'] = df['unit'].astype(str)
 
@@ -168,8 +189,9 @@ def main() -> None:
 
         if original_df_list:
             st.write("Preview of original data:")
-            for i, df in enumerate(original_df_list):
-                st.write(f"File: {transformed_file_name[i]}")
+            # CHANGED: renamed i -> idx to avoid shadowing the outer loop variable
+            for idx, df in enumerate(original_df_list):
+                st.write(f"File: {transformed_file_name[idx]}")
                 st.write(df)
 
             multiplier = st.text_input(
@@ -179,7 +201,7 @@ def main() -> None:
             except ValueError:
                 st.write(
                     "Invalid multiplier format. Please use a number or a percentage (e.g. 1.2 or 20%).")
-                multiplier = 1  # Set default multiplier value
+                multiplier = 1
 
             transformed_df_list = []
             for df in original_df_list:
@@ -192,27 +214,17 @@ def main() -> None:
                 preview_df = pd.concat(transformed_df_list, ignore_index=True)
                 st.write(preview_df)
 
-                @st.cache_data
-                def convert_df_to_excel(df: pd.DataFrame) -> bytes:
-                    """Converts a DataFrame to Excel format."""
-                    output = io.BytesIO()
-                    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                        df.to_excel(writer, index=False)
-                    return output.getvalue()
-
                 excel_data = convert_df_to_excel(preview_df)
 
-                # Get the original file name and add "_transformed" to it
                 if len(transformed_file_name) == 1:
-                    file_name = transformed_file_name[0].split(
-                        '.')[0] + "_transformed.xlsx"
+                    # CHANGED: splitext only strips the extension, keeps dots in the name
+                    base = os.path.splitext(transformed_file_name[0])[0]
+                    file_name = base + "_transformed.xlsx"
                 else:
                     file_name = "transformed_data.xlsx"
 
-                # Allow the user to edit the file name
                 file_name = st.text_input("Enter file name:", value=file_name)
 
-                # Ensure the file name ends with ".xlsx"
                 if not file_name.endswith(".xlsx"):
                     file_name += ".xlsx"
 
@@ -220,7 +232,7 @@ def main() -> None:
                     label="Download transformed data as Excel",
                     data=excel_data,
                     file_name=file_name,
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 )
 
 
